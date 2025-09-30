@@ -7,29 +7,31 @@ use Illuminate\Http\Request;
 
 use App\Models\Ticket;
 
+use Illuminate\Support\Facades\Gate;
+
 class CommentController extends Controller
 {
-  /**
-   * Store a newly created resource in storage.
-   */
-  public function store(Request $request)
-  {
-    $validatedData = $request->validate([
-      'ticket_id' => 'required|exists:tickets,id',
-      'body' => 'required|string',
-    ]);
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'ticket_id' => 'required|exists:tickets,id',
+            'body' => 'required|string',
+        ]);
 
-    $ticket = Ticket::findOrFail($validatedData['ticket_id']);
+        $ticket = Ticket::findOrFail($validatedData['ticket_id']);
 
-    if (!auth()->user()->tokenCan('is-admin') && $ticket->user_id !== auth()->id()) {
-      return response()->json(['message' => 'Forbidden'], 403);
+        if (Gate::denies('add-comment', $ticket)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $comment = $ticket->comments()->create([
+            'user_id' => auth()->id(),
+            'body' => $validatedData['body'],
+        ]);
+
+        return response()->json($comment, 201);
     }
-
-    $comment = $ticket->comments()->create([
-      'user_id' => auth()->id(),
-      'body' => $validatedData['body'],
-    ]);
-
-    return response()->json($comment, 201);
-  }
 }

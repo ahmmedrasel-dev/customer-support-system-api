@@ -74,6 +74,10 @@ To get started, you will need to have the following installed on your machine:
 
 *   `POST /api/comments` - Create a new comment.
 
+### Attachments
+
+*   `POST /api/attachments` - Upload an attachment.
+
 ### User Roles
 
 There are two user roles:
