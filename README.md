@@ -62,6 +62,14 @@ To get started, you will need to have the following installed on your machine:
 *   `POST /api/login` - Login a user.
 *   `POST /api/logout` - Logout a user.
 
+### Tickets
+
+*   `GET /api/tickets` - Get a list of tickets.
+*   `POST /api/tickets` - Create a new ticket.
+*   `GET /api/tickets/{id}` - Get a single ticket.
+*   `PUT /api/tickets/{id}` - Update a ticket.
+*   `DELETE /api/tickets/{id}` - Delete a ticket.
+
 ### User Roles
 
 There are two user roles:
