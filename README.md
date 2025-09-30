@@ -70,6 +70,10 @@ To get started, you will need to have the following installed on your machine:
 *   `PUT /api/tickets/{id}` - Update a ticket.
 *   `DELETE /api/tickets/{id}` - Delete a ticket.
 
+### Comments
+
+*   `POST /api/comments` - Create a new comment.
+
 ### User Roles
 
 There are two user roles:
