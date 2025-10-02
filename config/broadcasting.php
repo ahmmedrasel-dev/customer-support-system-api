@@ -2,7 +2,7 @@
 
 return [
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Default Broadcaster
     |--------------------------------------------------------------------------
@@ -15,9 +15,9 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_CONNECTION', 'null'),
+  'default' => env('BROADCAST_CONNECTION', 'null'),
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Broadcast Connections
     |--------------------------------------------------------------------------
@@ -28,44 +28,39 @@ return [
     |
     */
 
-    'connections' => [
+  'connections' => [
 
-        'pusher' => [
-            'driver' => 'pusher',
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'app_id' => env('PUSHER_APP_ID'),
-            'options' => [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
-                'host' => env('PUSHER_HOST', 'api.pusherapp.com'),
-                'port' => env('PUSHER_PORT', 443),
-                'scheme' => env('PUSHER_SCHEME', 'https'),
-                'encrypted' => true,
-                'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
-            ],
-            'client_options' => [
-                // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
-            ],
-        ],
+    'pusher' => [
+      'driver' => 'pusher',
+      'key' => env('PUSHER_APP_KEY'),
+      'secret' => env('PUSHER_APP_SECRET'),
+      'app_id' => env('PUSHER_APP_ID'),
+      'options' => [
 
-        'ably' => [
-            'driver' => 'ably',
-            'key' => env('ABLY_KEY'),
-        ],
-
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => 'default',
-        ],
-
-        'log' => [
-            'driver' => 'log',
-        ],
-
-        'null' => [
-            'driver' => 'null',
-        ],
-
+        'cluster' => env('PUSHER_APP_CLUSTER'),
+        'useTLS' => env('PUSHER_APP_USE_TLS', true),
+      ],
+      'client_options' => [],
     ],
+
+    'ably' => [
+      'driver' => 'ably',
+      'key' => env('ABLY_KEY'),
+    ],
+
+    'redis' => [
+      'driver' => 'redis',
+      'connection' => 'default',
+    ],
+
+    'log' => [
+      'driver' => 'log',
+    ],
+
+    'null' => [
+      'driver' => 'null',
+    ],
+
+  ],
 
 ];

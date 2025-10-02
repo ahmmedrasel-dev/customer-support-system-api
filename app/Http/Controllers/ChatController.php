@@ -70,7 +70,8 @@ class ChatController extends Controller
       ]);
 
       // Dispatch the event directly
-      event(new NewChatMessage($message));
+      broadcast(new NewChatMessage($message))->toOthers();
+
 
       Log::info('Chat message event dispatched successfully');
     } catch (\Exception $e) {
