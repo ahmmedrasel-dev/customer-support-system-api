@@ -21,5 +21,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin routes
     Route::prefix('admin')->group(function () {
         Route::get('customers', [AuthController::class, 'getCustomers']);
+        Route::get('tickets', [AuthController::class, 'getTickets']);
+        Route::get('tickets/{ticket}', [AuthController::class, 'getTicketDetail']);
+        Route::put('tickets/{ticket}', [AuthController::class, 'updateTicket']);
     });
 });

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
+use App\Models\Ticket;
 
 class AuthController extends Controller
 {
@@ -81,5 +82,58 @@ class AuthController extends Controller
             ->get();
 
         return response()->json($customers);
+    }
+
+    public function getTickets(Request $request)
+    {
+        // Check if user is admin using Gate
+        if (!Gate::allows('is-admin', $request->user())) {
+            return response()->json([
+                'message' => 'Unauthorized. Admin access required.'
+            ], 403);
+        }
+
+        // Get all tickets with user and activity counts
+        $tickets = Ticket::with(['user:id,name,email'])
+            ->withCount(['comments', 'attachments'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($tickets);
+    }
+
+    public function getTicketDetail(Request $request, Ticket $ticket)
+    {
+        // Check if user is admin or ticket owner
+        if (!Gate::allows('view', [$ticket, $request->user()])) {
+            return response()->json([
+                'message' => 'Unauthorized. You can only view your own tickets.'
+            ], 403);
+        }
+
+        // Load ticket with relationships
+        $ticket->load(['user:id,name,email', 'comments.user:id,name,email,role', 'attachments']);
+
+        return response()->json($ticket);
+    }
+
+    public function updateTicket(Request $request, Ticket $ticket)
+    {
+        // Check if user is admin
+        if (!Gate::allows('is-admin', $request->user())) {
+            return response()->json([
+                'message' => 'Unauthorized. Admin access required.'
+            ], 403);
+        }
+
+        $validatedData = $request->validate([
+            'status' => 'sometimes|in:open,in_progress,resolved,closed',
+            'priority' => 'sometimes|in:low,medium,high,urgent',
+            'assigned_to' => 'sometimes|nullable|exists:users,id',
+        ]);
+
+        $ticket->update($validatedData);
+
+        return response()->json($ticket);
     }
 }
