@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\ChatController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
@@ -25,4 +26,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('tickets/{ticket}', [AuthController::class, 'getTicketDetail']);
         Route::put('tickets/{ticket}', [AuthController::class, 'updateTicket']);
     });
+
+
+    Route::prefix('tickets/{ticket}/chat')->group(function () {
+        Route::get('messages', [ChatController::class, 'getMessages']);
+        Route::post('messages', [ChatController::class, 'sendMessage']);
+        Route::post('messages/read', [ChatController::class, 'markAsRead']);
+    });
+
 });
