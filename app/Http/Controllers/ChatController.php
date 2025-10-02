@@ -62,12 +62,6 @@ class ChatController extends Controller
 
     // Broadcast the new message (with error handling)
     try {
-      Log::info('Broadcasting new chat message', [
-        'message_id' => $message->id,
-        'ticket_id' => $message->ticket_id,
-        'user_id' => $message->user_id,
-        'message_content' => $message->message
-      ]);
 
       // Dispatch the event directly
       broadcast(new NewChatMessage($message))->toOthers();
