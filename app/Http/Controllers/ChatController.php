@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class ChatController extends Controller
 {
@@ -59,8 +60,13 @@ class ChatController extends Controller
         // Load the user relationship
         $message->load('user:id,name,role');
 
-        // Broadcast the new message
-        broadcast(new NewChatMessage($message))->toOthers();
+        // Broadcast the new message (with error handling)
+        try {
+            broadcast(new NewChatMessage($message))->toOthers();
+        } catch (\Exception $e) {
+            // Log the error but don't fail the request
+            Log::warning('Failed to broadcast message: ' . $e->getMessage());
+        }
 
         return response()->json($message, 201);
     }
