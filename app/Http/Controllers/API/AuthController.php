@@ -4,7 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Gate;
 use App\Models\User;
 
 class AuthController extends Controller
@@ -61,5 +61,25 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out']);
+    }
+
+    public function getCustomers(Request $request)
+    {
+        // Check if user is admin using Gate
+        if (!Gate::allows('is-admin', $request->user())) {
+            return response()->json([
+                'message' => 'Unauthorized. Admin access required.'
+            ], 403);
+        }
+
+        // Get all customers with ticket counts
+        $customers = User::where('role', 'customer')
+            ->withCount(['tickets', 'tickets as active_tickets_count' => function ($query) {
+                $query->whereIn('status', ['open', 'in_progress']);
+            }])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($customers);
     }
 }
