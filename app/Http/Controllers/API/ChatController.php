@@ -58,7 +58,7 @@ class ChatController extends Controller
     public function markAsRead(Request $request, Ticket $ticket): JsonResponse
     {
         // Check if user can access this ticket
-        if (!Gate::allows('view-ticket', [$ticket, $request->user()])) {
+        if (!Gate::allows('view', [$ticket, $request->user()])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

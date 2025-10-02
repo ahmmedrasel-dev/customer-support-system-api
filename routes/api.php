@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\ChatController;
+use App\Http\Controllers\ChatController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('messages', [ChatController::class, 'getMessages']);
         Route::post('messages', [ChatController::class, 'sendMessage']);
         Route::post('messages/read', [ChatController::class, 'markAsRead']);
+        Route::post('upload', [ChatController::class, 'uploadFile']);
     });
 
 });
