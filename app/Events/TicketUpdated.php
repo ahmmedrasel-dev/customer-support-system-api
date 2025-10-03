@@ -81,7 +81,7 @@ class TicketUpdated implements ShouldBroadcast
           'changes' => $this->changes,
           'updated_by' => $this->updatedBy->name,
         ],
-        'action_url' => $user->role === 'admin' ? "/admin/tickets/{$this->ticket->id}" : "/tickets/{$this->ticket->id}",
+        'action_url' => $user->role === 'admin' ? "/admin/tickets/{$this->ticket->id}" : "/customer/tickets/{$this->ticket->id}",
         'user_id' => $user->id,
         'sender_id' => $this->updatedBy->id,
       ]);

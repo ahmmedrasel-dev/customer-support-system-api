@@ -78,7 +78,7 @@ class TicketDeleted implements ShouldBroadcast
       'message' => auth()->user()?->role === 'admin'
         ? "Admin {$this->deletedBy->name} deleted ticket '{$this->ticket->title}'"
         : "Your ticket '{$this->ticket->title}' has been closed",
-      'action_url' => auth()->user()?->role === 'admin' ? "/admin/tickets" : "/tickets",
+      'action_url' => auth()->user()?->role === 'admin' ? "/admin/tickets" : "/customer/tickets",
       'data' => [
         'ticket_id' => $this->ticket->id,
         'ticket_title' => $this->ticket->title,
