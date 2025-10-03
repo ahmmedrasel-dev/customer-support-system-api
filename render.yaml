@@ -3,15 +3,32 @@ services:
     name: customer-support-api
     env: docker
     dockerfilePath: ./Dockerfile
+    autoDeploy: true
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        value: https://customer-support-api.onrender.com
+
+      # MySQL database connection
       - key: DB_CONNECTION
-        value: sqlite
+        value: mysql
+      - key: DB_HOST
+        value: your-mysql-host.com
+      - key: 82.112.230.142
+        value: 3306
       - key: DB_DATABASE
-        value: /var/www/html/database/database.sqlite
+        value: customersupport
+      - key: DB_USERNAME
+        value: customersupportusr
+      - key: DB_PASSWORD
+        value: mkt4Z58aEjZcxv6qRVqS
+
+      # Other configs
       - key: BROADCAST_CONNECTION
         value: pusher
       - key: PUSHER_APP_ID
@@ -32,9 +49,7 @@ services:
         value: database
       - key: LOG_LEVEL
         value: error
-    # Health check endpoint
     healthCheckPath: /api/health
-    # Scale settings
     scaling:
       minInstances: 1
       maxInstances: 3

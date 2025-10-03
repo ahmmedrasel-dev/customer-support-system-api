@@ -5,19 +5,10 @@ set -e
 
 echo "🚀 Starting Laravel API deployment..."
 
-# Copy production environment file
-if [ ! -f .env ]; then
-    echo "📋 Copying production environment configuration..."
-    cp .env.production .env
-fi
-
 # Generate app key if not set
 echo "🔑 Generating application key..."
 php artisan key:generate --force --no-interaction
 
-# Create database file if it doesn't exist
-echo "🗄️ Setting up database..."
-touch database/database.sqlite
 
 # Run database migrations
 echo "📊 Running database migrations..."
