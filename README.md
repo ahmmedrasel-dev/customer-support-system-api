@@ -1,94 +1,147 @@
-# Customer Support API
+# Customer Support System — API
 
-A simple customer support API built with Laravel.
+This repository contains the backend API for the Customer Support System, built with Laravel. The API powers ticket creation, assignment, comments, attachments, and real-time notifications (Pusher + Laravel Broadcasting).
 
-## About the Project
+This README documents implemented features, setup instructions, important environment variables, and how to test the real-time notification flow.
 
-This is a simple API for a customer support system. It allows users to register, login, and create support tickets. There are two types of users: customers and admins. Customers can create and view their own support tickets, while admins can view and manage all support tickets.
+## Implemented Features
 
-## Getting Started
+-   Authentication with Laravel Sanctum (register/login/logout).
+-   Ticket lifecycle: create, view, update, delete.
+-   Ticket assignment to admin users with database notifications and broadcast events.
+-   Comments and attachments on tickets.
+-   Persistent notifications stored in the `notifications` table and real-time delivery via Pusher.
+-   Broadcasting channels:
+    -   `admin-notifications` (admins)
+    -   `user.{id}` (private per-user channel)
+-   Events implemented: `TicketCreated`, `TicketAssigned`, `TicketUpdated`, `TicketDeleted`.
+-   Admin-only endpoints: customers, tickets, recent tickets (latest 10), admins list for assignment.
 
-To get started, you will need to have the following installed on your machine:
+## Quick Setup (Development)
 
-*   PHP >= 8.1
-*   Composer
-*   MySQL
+Prerequisites:
 
-### Installation
+-   PHP 8.2+
+-   Composer
+-   MySQL
+-   Node.js & npm (front-end client)
 
-1.  Clone the repository:
+1. Install dependencies
 
-    ```bash
-    git clone https://github.com/rasel-ahmmed/customer-support-api.git
-    ```
+```bash
+composer install
+```
 
-2.  Install the dependencies:
+2. Environment
 
-    ```bash
-    composer install
-    ```
+Copy `.env.example` to `.env` and configure values. Important environment variables:
 
-3.  Create a copy of the `.env.example` file and name it `.env`:
+-   APP_URL (e.g. `http://127.0.0.1:8000`)
+-   DB_CONNECTION (sqlite/mysql)
+-   PUSHER_APP_ID
+-   PUSHER_APP_KEY
+-   PUSHER_APP_SECRET
+-   PUSHER_APP_CLUSTER
+-   BROADCAST_CONNECTION=pusher
 
-    ```bash
-    cp .env.example .env
-    ```
+3. Database
 
-4.  Generate a new application key:
+If you use SQLite, point `DB_CONNECTION=sqlite` and create `database/database.sqlite`.
 
-    ```bash
-    php artisan key:generate
-    ```
+Run migrations and seeders:
 
-5.  Configure your database in the `.env` file.
+```bash
+php artisan migrate --seed
+```
 
-6.  Run the database migrations:
+4. Run the application
 
-    ```bash
-    php artisan migrate
-    ```
+```bash
+php artisan serve
+```
 
-7.  Start the development server:
+5. Start a queue worker (recommended for queued broadcasts/events)
 
-    ```bash
-    php artisan serve
-    ```
+```bash
+php artisan queue:work
+```
 
-## API Endpoints
+## Environment (Broadcasting)
 
-### Authentication
+This project uses Laravel broadcasting with the Pusher driver. Make sure your `.env` contains the correct Pusher credentials and `BROADCAST_CONNECTION=pusher`.
 
-*   `POST /api/register` - Register a new user.
-*   `POST /api/login` - Login a user.
-*   `POST /api/logout` - Logout a user.
+Frontend clients must authenticate private channels by sending the Bearer token to the Laravel broadcasting auth endpoint (the client is already configured to use `api/broadcasting/auth`).
 
-### Tickets
+## API Endpoints (Overview)
 
-*   `GET /api/tickets` - Get a list of tickets.
-*   `POST /api/tickets` - Create a new ticket.
-*   `GET /api/tickets/{id}` - Get a single ticket.
-*   `PUT /api/tickets/{id}` - Update a ticket.
-*   `DELETE /api/tickets/{id}` - Delete a ticket.
+Authentication
 
-### Comments
+-   `POST /api/register` — register a new user (returns token)
+-   `POST /api/login` — login (returns token)
+-   `POST /api/logout` — logout (requires auth)
 
-*   `POST /api/comments` - Create a new comment.
+Tickets
 
-### Attachments
+-   `GET /api/tickets` — list tickets (admins see all, customers see own)
+-   `POST /api/tickets` — create ticket (auth)
+-   `GET /api/tickets/{ticket}` — show ticket
+-   `PUT/PATCH /api/tickets/{ticket}` — update ticket (admin)
+-   `DELETE /api/tickets/{ticket}` — delete ticket (admin)
+-   `POST /api/tickets/{ticket}/assign` — assign ticket to admin (admin only)
 
-*   `POST /api/attachments` - Upload an attachment.
+Admin routes (prefix `/api/admin`)
 
-### User Roles
+-   `GET /api/admin/customers` — get customers list
+-   `GET /api/admin/tickets` — list all tickets
+-   `GET /api/admin/recent-tickets` — get latest 10 tickets
+-   `GET /api/admin/admins` — list admin users (for assignment dropdown)
 
-There are two user roles:
+Notifications
 
-*   `customer` - Can create and view their own support tickets.
-*   `admin` - Can view and manage all support tickets.
+-   `GET /api/notifications` — user notifications
+-   `PATCH /api/notifications/{id}/read` — mark a notification read
+-   `PATCH /api/notifications/mark-all-read` — mark all notifications read
+-   `GET /api/notifications/unread-count` — unread count
 
-## Contributing
+## Real-time Notifications (How it works)
 
-Contributions are welcome! Please feel free to submit a pull request.
+1. Events (TicketCreated / TicketAssigned / TicketUpdated / TicketDeleted) create database notifications for relevant users.
+2. Events also implement `ShouldBroadcast` and broadcast payloads on:
+    - `admin-notifications` channel for admins
+    - `user.{id}` private channels for specific users
+3. Frontend connects to Pusher and authenticates through `/api/broadcasting/auth` using the Bearer token.
+4. When an event is broadcast, the front-end receives the payload and displays an in-app toast and the notification is persisted in the DB.
 
-## License
+Important: Ensure `php artisan queue:work` is running if your events are queued.
 
-This project is licensed under the MIT License.
+## Example: Assigning a Ticket
+
+Endpoint: `POST /api/tickets/{ticket}/assign`
+
+Request body:
+
+```json
+{ "assigned_to": 3 }
+```
+
+Notes:
+
+-   Only admin users may call this endpoint.
+-   The assigned user must have `role = 'admin'`.
+-   The action creates notifications for the assigned admin and other admins, and broadcasts a `notification.ticket.assigned` event.
+
+## Troubleshooting
+
+-   404 on new routes: clear and re-cache routes after changes: `php artisan route:clear && php artisan route:cache`.
+-   403 broadcasting auth: ensure the frontend sends the Bearer token to `/api/broadcasting/auth` and `BROADCAST_CONNECTION` is `pusher`.
+-   No real-time events: make sure the queue worker is running.
+
+## Next Improvements (optional)
+
+-   Add integration tests for events and notification flow.
+-   Add Postman collection and API documentation.
+-   Add pagination and filtering to admin ticket endpoints.
+
+---
+
+If you want, I'll add a matching README for the frontend client that explains how to configure Pusher and the NotificationProvider usage.
