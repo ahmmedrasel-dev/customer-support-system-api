@@ -4,6 +4,9 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     autoDeploy: true
+    ports:
+      - port: 80
+        protocol: http
     envVars:
       - key: APP_ENV
         value: production
