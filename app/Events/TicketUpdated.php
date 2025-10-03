@@ -138,11 +138,27 @@ class TicketUpdated implements ShouldBroadcast
 
   public function broadcastWith(): array
   {
+    // Generate a generic message for broadcasting
+    $changes = [];
+    if (isset($this->changes['status'])) {
+      $changes[] = "status changed to '{$this->changes['status']}'";
+    }
+    if (isset($this->changes['priority'])) {
+      $changes[] = "priority changed to '{$this->changes['priority']}'";
+    }
+    if (isset($this->changes['subject'])) {
+      $changes[] = "subject updated";
+    }
+    if (isset($this->changes['description'])) {
+      $changes[] = "description updated";
+    }
+    $changeText = implode(', ', $changes);
+
     return [
       'type' => 'ticket_updated',
       'title' => 'Ticket Updated',
-      'message' => $this->generateMessage(auth()->user() ?? new User(['role' => 'guest'])),
-      'action_url' => auth()->user()?->role === 'admin' ? "/admin/tickets/{$this->ticket->id}" : "/customer/tickets/{$this->ticket->id}",
+      'message' => "Ticket '{$this->ticket->subject}' has been {$changeText}",
+      'action_url' => "/customer/tickets/{$this->ticket->id}", // Default to customer URL for broadcasts
       'data' => [
         'ticket_id' => $this->ticket->id,
         'changes' => $this->changes,
