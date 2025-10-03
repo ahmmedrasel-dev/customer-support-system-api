@@ -105,6 +105,37 @@ class AuthController extends Controller
     return response()->json($tickets);
   }
 
+  // New: recent tickets for admin dashboard (latest 10)
+  public function recentTickets(Request $request)
+  {
+    if (!Gate::allows('is-admin', $request->user())) {
+      return response()->json([
+        'message' => 'Unauthorized. Admin access required.'
+      ], 403);
+    }
+
+    $tickets = Ticket::with(['user:id,name,email', 'assignedUser:id,name'])
+      ->withCount(['comments', 'attachments'])
+      ->orderBy('created_at', 'desc')
+      ->limit(10)
+      ->get()
+      ->map(function ($t) {
+        return [
+          'id' => $t->id,
+          'subject' => $t->subject,
+          'customer' => $t->user?->name,
+          'agent' => $t->assignedUser?->name,
+          'priority' => $t->priority,
+          'status' => $t->status,
+          'comments_count' => $t->comments_count,
+          'attachments_count' => $t->attachments_count,
+          'created_at' => $t->created_at?->toDateTimeString(),
+        ];
+      });
+
+    return response()->json(['data' => $tickets]);
+  }
+
   public function getTicketDetail(Request $request, Ticket $ticket)
   {
     // Check if user is admin or ticket owner
