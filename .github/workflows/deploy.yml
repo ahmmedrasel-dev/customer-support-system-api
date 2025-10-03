@@ -1,0 +1,43 @@
+# .github/workflows/deploy.yml
+
+name: Deploy to Production
+
+# Trigger the workflow on push to main branch
+on:
+  push:
+    branches:
+      - main
+
+# Define the deployment job
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+
+
+            # comment write in english
+            # Server Login and navigate to the project directory
+            cd htdocs/supportsystemapi.freedompower.work
+
+            # Git pull the latest changes from the main branch
+            git pull origin main
+
+            # Install PHP dependencies
+            composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader
+
+            # Run database migrations
+            php artisan migrate --force
+
+            # Clear and cache configurations
+            php artisan optimize:clear
+            php artisan optimize
+
+            echo "✅ Deployment to production server completed successfully."
