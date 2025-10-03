@@ -18,8 +18,6 @@ class TicketAssigned implements ShouldBroadcast
   public Ticket $ticket;
   public User $assignedBy;
   public User $assignedTo;
-  public User $assignedBy;
-  public User $assignedTo;
 
   public function __construct(Ticket $ticket, User $assignedBy, User $assignedTo)
   {
@@ -31,11 +29,11 @@ class TicketAssigned implements ShouldBroadcast
     Notification::create([
       'type' => 'ticket_assigned',
       'title' => 'Ticket Assigned to You',
-      'message' => "Admin {$assignedBy->name} assigned ticket '{$ticket->title}' to you",
+      'message' => "Admin {$assignedBy->name} assigned ticket '{$ticket->subject}' to you",
       'data' => [
         'ticket_id' => $ticket->id,
         'assigned_by' => $assignedBy->name,
-        'ticket_title' => $ticket->title,
+        'ticket_subject' => $ticket->subject,
       ],
       'action_url' => "/admin/tickets/{$ticket->id}",
       'user_id' => $assignedTo->id,
@@ -51,7 +49,7 @@ class TicketAssigned implements ShouldBroadcast
       Notification::create([
         'type' => 'ticket_assigned_other',
         'title' => 'Ticket Assignment Update',
-        'message' => "{$assignedBy->name} assigned ticket '{$ticket->title}' to {$assignedTo->name}",
+        'message' => "{$assignedBy->name} assigned ticket '{$ticket->subject}' to {$assignedTo->name}",
         'data' => [
           'ticket_id' => $ticket->id,
           'assigned_by' => $assignedBy->name,
@@ -82,7 +80,7 @@ class TicketAssigned implements ShouldBroadcast
     return [
       'type' => 'ticket_assigned',
       'title' => $this->assignedTo->id === auth()->id() ? 'Ticket Assigned to You' : 'Ticket Assignment Update',
-      'message' => "{$this->assignedBy->name} assigned ticket '{$this->ticket->title}' to {$this->assignedTo->name}",
+      'message' => "{$this->assignedBy->name} assigned ticket '{$this->ticket->subject}' to {$this->assignedTo->name}",
       'action_url' => "/admin/tickets/{$this->ticket->id}",
       'data' => [
         'ticket_id' => $this->ticket->id,

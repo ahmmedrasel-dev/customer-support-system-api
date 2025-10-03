@@ -4,9 +4,11 @@ namespace App\Http\Controllers\API;
 
 use App\Events\TicketCreated;
 use App\Events\TicketUpdated;
+use App\Events\TicketAssigned;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -125,18 +127,31 @@ class TicketController extends Controller
 
   public function assign(Request $request, Ticket $ticket)
   {
+    // Only admins may assign tickets
+    if (!Gate::allows('is-admin', $request->user())) {
+      return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
+    }
+
     $request->validate([
       'assigned_to' => 'required|exists:users,id',
     ]);
 
     $assignedTo = User::findOrFail($request->assigned_to);
 
+    // Ensure the assigned user is an admin
+    if ($assignedTo->role !== 'admin') {
+      return response()->json(['message' => 'Assigned user must be an admin.'], 422);
+    }
+
+    $oldData = $ticket->toArray();
+
+    // Update assignment and assigned_at. Do not set an invalid status value.
     $ticket->update([
-      'assigned_to' => $request->assigned_to,
-      'status' => 'assigned',
-      'assigned_at' => now(),
+      'assigned_to' => $assignedTo->id,
+      'status' => $ticket->status === 'open' ? 'in_progress' : $ticket->status,
     ]);
 
+    // Broadcast assignment event
     broadcast(new TicketAssigned($ticket, Auth::user(), $assignedTo))->toOthers();
 
     return response()->json($ticket->load(['user', 'assignedUser']));

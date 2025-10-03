@@ -87,6 +87,20 @@ class AuthController extends Controller
     return response()->json($customers);
   }
 
+  // Return admins for assignment dropdown
+  public function getAdmins(Request $request)
+  {
+    if (!Gate::allows('is-admin', $request->user())) {
+      return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
+    }
+
+    $admins = User::where('role', 'admin')
+      ->orderBy('name')
+      ->get(['id', 'name', 'email']);
+
+    return response()->json(['data' => $admins]);
+  }
+
   public function getTickets(Request $request)
   {
     // Check if user is admin using Gate

@@ -19,7 +19,6 @@ class Ticket extends Model
     'priority',
     'status',
     'assigned_to',
-    'assigned_at'
   ];
 
   protected $casts = [
