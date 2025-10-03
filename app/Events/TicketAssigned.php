@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Notification;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Broadcasting\Channel;
@@ -10,14 +11,13 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TicketAssigned
+class TicketAssigned implements ShouldBroadcast
 {
   use Dispatchable, InteractsWithSockets, SerializesModels;
 
-  /**
-   * Create a new event instance.
-   */
   public Ticket $ticket;
+  public User $assignedBy;
+  public User $assignedTo;
   public User $assignedBy;
   public User $assignedTo;
 

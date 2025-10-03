@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Notification;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Broadcasting\Channel;
@@ -10,10 +11,12 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TicketCreated
+class TicketCreated implements ShouldBroadcast
 {
   use Dispatchable, InteractsWithSockets, SerializesModels;
+
   public Ticket $ticket;
+
   /**
    * Create a new event instance.
    */
@@ -21,13 +24,13 @@ class TicketCreated
   {
     $this->ticket = $ticket;
 
-    // Create notification fot all admins
+    // Create notification for all admins
     $admins = User::where('role', 'admin')->get();
     foreach ($admins as $admin) {
       Notification::create([
         'type' => 'ticket_created',
         'title' => 'New Ticket Created',
-        'message' => "Customer {$ticket->user->name} created a new ticket: {$ticket->title}",
+        'message' => "Customer {$ticket->user->name} created a new ticket: {$ticket->subject}",
         'data' => ['ticket_id' => $ticket->id, 'customer_name' => $ticket->user->name, 'priority' => $ticket->priority],
         'action_url' => '/admin/tickets/' . $ticket->id,
         'user_id' => $admin->id,
@@ -60,7 +63,7 @@ class TicketCreated
     return [
       'type' => 'ticket_created',
       'title' => 'New Support Ticket',
-      'message' => "Customer {$this->ticket->user->name} created: {$this->ticket->title}",
+      'message' => "Customer {$this->ticket->user->name} created: {$this->ticket->subject}",
       'action_url' => "/admin/tickets/{$this->ticket->id}",
       'data' => [
         'ticket_id' => $this->ticket->id,

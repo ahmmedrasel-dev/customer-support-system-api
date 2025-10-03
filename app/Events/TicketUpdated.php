@@ -2,24 +2,24 @@
 
 namespace App\Events;
 
+use App\Models\Notification;
+use App\Models\Ticket as TicketModel;
+use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TicketUpdated
+class TicketUpdated implements ShouldBroadcast
 {
   use Dispatchable, InteractsWithSockets, SerializesModels;
 
-  /**
-   * Create a new event instance.
-   */
-  public Ticket $ticket;
+  public TicketModel $ticket;
   public User $updatedBy;
   public array $changes;
 
-  public function __construct(Ticket $ticket, User $updatedBy, array $changes = [])
+  public function __construct(TicketModel $ticket, User $updatedBy, array $changes = [])
   {
     $this->ticket = $ticket;
     $this->updatedBy = $updatedBy;
@@ -31,16 +31,24 @@ class TicketUpdated
 
   private function createNotifications(): void
   {
+    \Log::info('Creating notifications for ticket update', [
+      'ticket_id' => $this->ticket->id,
+      'changes' => $this->changes,
+      'updated_by' => $this->updatedBy->id
+    ]);
+
     $usersToNotify = collect();
 
     // Always notify the ticket creator
     $usersToNotify->push($this->ticket->user);
+    \Log::info('Added ticket creator to notify list', ['user_id' => $this->ticket->user->id]);
 
     // Notify assigned admin if exists
     if ($this->ticket->assigned_to) {
       $assignedAdmin = User::find($this->ticket->assigned_to);
       if ($assignedAdmin) {
         $usersToNotify->push($assignedAdmin);
+        \Log::info('Added assigned admin to notify list', ['user_id' => $assignedAdmin->id]);
       }
     }
 
@@ -48,18 +56,23 @@ class TicketUpdated
     if (isset($this->changes['status'])) {
       $admins = User::where('role', 'admin')->get();
       $usersToNotify = $usersToNotify->merge($admins);
+      \Log::info('Added admins for status change', ['admin_count' => $admins->count()]);
     }
 
     // Remove duplicates
     $usersToNotify = $usersToNotify->unique('id');
+    \Log::info('Users to notify after deduplication', ['count' => $usersToNotify->count(), 'user_ids' => $usersToNotify->pluck('id')->toArray()]);
 
     foreach ($usersToNotify as $user) {
       // Skip the user who made the update
-      if ($user->id === $this->updatedBy->id) continue;
+      if ($user->id === $this->updatedBy->id) {
+        \Log::info('Skipping notification for sender', ['user_id' => $user->id]);
+        continue;
+      }
 
       $message = $this->generateMessage($user);
 
-      Notification::create([
+      $notification = Notification::create([
         'type' => 'ticket_updated',
         'title' => 'Ticket Updated',
         'message' => $message,
@@ -72,6 +85,8 @@ class TicketUpdated
         'user_id' => $user->id,
         'sender_id' => $this->updatedBy->id,
       ]);
+
+      \Log::info('Notification created', ['notification_id' => $notification->id, 'for_user' => $user->id]);
     }
   }
 
@@ -85,8 +100,8 @@ class TicketUpdated
     if (isset($this->changes['priority'])) {
       $changes[] = "priority changed to '{$this->changes['priority']}'";
     }
-    if (isset($this->changes['title'])) {
-      $changes[] = "title updated";
+    if (isset($this->changes['subject'])) {
+      $changes[] = "subject updated";
     }
     if (isset($this->changes['description'])) {
       $changes[] = "description updated";
@@ -95,9 +110,9 @@ class TicketUpdated
     $changeText = implode(', ', $changes);
 
     if ($user->role === 'admin') {
-      return "Ticket '{$this->ticket->title}' {$changeText} by {$this->updatedBy->name}";
+      return "Ticket '{$this->ticket->subject}' {$changeText} by {$this->updatedBy->name}";
     } else {
-      return "Your ticket '{$this->ticket->title}' has been {$changeText}";
+      return "Your ticket '{$this->ticket->subject}' has been {$changeText}";
     }
   }
 
@@ -127,7 +142,7 @@ class TicketUpdated
       'type' => 'ticket_updated',
       'title' => 'Ticket Updated',
       'message' => $this->generateMessage(auth()->user() ?? new User(['role' => 'guest'])),
-      'action_url' => auth()->user()?->role === 'admin' ? "/admin/tickets/{$this->ticket->id}" : "/tickets/{$this->ticket->id}",
+      'action_url' => auth()->user()?->role === 'admin' ? "/admin/tickets/{$this->ticket->id}" : "/customer/tickets/{$this->ticket->id}",
       'data' => [
         'ticket_id' => $this->ticket->id,
         'changes' => $this->changes,

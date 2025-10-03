@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
 {
@@ -103,6 +104,8 @@ class TicketController extends Controller
       'assigned_to' => 'sometimes|exists:users,id',
     ]);
 
+    // Store old data before updating
+    $oldData = $ticket->toArray();
     $ticket->update($validatedData);
 
     $changes = [];

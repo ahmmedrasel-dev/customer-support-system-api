@@ -2,17 +2,21 @@
 
 namespace App\Events;
 
+use App\Models\Notification;
+use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TicketDeleted
+class TicketDeleted implements ShouldBroadcast
 {
   use Dispatchable, InteractsWithSockets, SerializesModels;
 
   public Ticket $ticket;
+  public User $deletedBy;
   public User $deletedBy;
 
   public function __construct(Ticket $ticket, User $deletedBy)
