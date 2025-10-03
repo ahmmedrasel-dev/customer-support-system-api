@@ -10,6 +10,15 @@ use App\Http\Controllers\API\AttachmentController;
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 
+// Health check endpoint for Render
+Route::get('health', function () {
+  return response()->json([
+    'status' => 'ok',
+    'timestamp' => now()->toISOString(),
+    'version' => '1.0.0'
+  ]);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('logout', [AuthController::class, 'logout']);
 
