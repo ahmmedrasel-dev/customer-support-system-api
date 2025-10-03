@@ -16,6 +16,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::apiResource('tickets', TicketController::class);
   Route::post('comments', [CommentController::class, 'store']);
   Route::post('attachments', [AttachmentController::class, 'store']);
+  Route::post('tickets/{ticket}/assign', [TicketController::class, 'assign']);
 
   // Admin routes
   Route::prefix('admin')->group(function () {
@@ -32,4 +33,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('messages/read', [ChatController::class, 'markAsRead']);
     Route::post('upload', [ChatController::class, 'uploadFile']);
   });
+
+  // Notifications
+  Route::apiResource('notifications', NotificationController::class)->only(['index', 'destroy']);
+  Route::patch('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+  Route::patch('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+  Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
 });
