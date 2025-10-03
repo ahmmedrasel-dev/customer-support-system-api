@@ -6,6 +6,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\TicketController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\AttachmentController;
+use App\Http\Controllers\API\NotificationController;
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
